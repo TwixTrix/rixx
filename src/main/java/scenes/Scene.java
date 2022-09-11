@@ -83,6 +83,11 @@ public class Scene {
        }
        isRunning = true;
 
+       if(fileName.equals("level1.txt") )
+       {
+           sceneMusic.playMusic("assets/sounds/town/rpg_village02__loop.ogg");
+       }
+
 
     }
 
@@ -95,6 +100,7 @@ public class Scene {
         else
         {
             pendingObjects.add(go);
+
 
         }
     }
@@ -138,10 +144,7 @@ public class Scene {
 
     public void editorUpdate(float dt)
     {
-        if(KeyListener.isKeyPressed(GLFW_KEY_F12))
-        {
-            delete();
-        }
+
 
         this.camera.adjustProjection();
 

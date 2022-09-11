@@ -43,4 +43,18 @@ public class RMath {
             float epsilon = Float.MIN_VALUE;
              return compare(vec1.x, vec2.x, epsilon) && compare(vec1.y , vec2.y , epsilon);
         }
+
+        public static boolean randomBoolean()
+        {
+            int num = (int)(Math.random()*2);
+            if(num ==0 )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
 }

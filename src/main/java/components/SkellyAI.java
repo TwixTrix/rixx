@@ -2,7 +2,9 @@ package components;
 
 import Rixx.GameObject;
 import Rixx.KeyListener;
+import Rixx.Prefabs;
 import Rixx.Window;
+import org.jbox2d.dynamics.contacts.Contact;
 import org.joml.Vector2f;
 import physics2D.Physics2D;
 import physics2D.components.RigidBody2D;
@@ -77,7 +79,7 @@ public class SkellyAI extends Component{
         }
 
 
-        checkOnGround();
+
 
         if(player != null && rb != null)
         {
@@ -123,11 +125,8 @@ public class SkellyAI extends Component{
 
                 if(timeLeft < 1.7f && !hit && timeLeft > .9f)
                 {
-                    if(Math.abs(distance) < .5f && Math.abs(distanceY) < .45f)
-                    {
-                        player.getComponent(PlayerController.class).damage(100);
-                        hit = true;
-                    }
+                    hit  = true;
+                    Window.getScene().addGameObjectToScene(Prefabs.MobAttackBox(new Vector2f(this.gameObject.transform.position.x , this.gameObject.transform.position.y), 1.25f, 1.25f, 100 , .5f));
                 }
                 return;
             }
@@ -207,6 +206,14 @@ public class SkellyAI extends Component{
 
     }
 
+    @Override
+    public void beginCollision(GameObject obj, Contact contact , Vector2f contactNormal) {
+        if ( !dying && obj.getComponent(PlayerController.class) != null) {
+            obj.getComponent(PlayerController.class).damage(50);
+        }
+
+
+    }
 
     public void damaged(int amount)
     {
@@ -218,12 +225,7 @@ public class SkellyAI extends Component{
     }
 
 
-    public void checkOnGround()
-    {
-        float innerPlayerWidth = 0.25f * 0.7f;
-        float yVal = -0.2f;
-        onGround  = Physics2D.checkOnGround(this.gameObject, innerPlayerWidth, yVal);
-    }
+
 
     public void die()
     {

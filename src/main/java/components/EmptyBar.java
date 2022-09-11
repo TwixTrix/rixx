@@ -12,7 +12,7 @@ public class EmptyBar extends  Component{
     public void start()
     {
         camera = Window.getScene().camera();
-        position = new Vector2f(camera.position.x + .5f, camera.position.y + 2.5f);
+        position = new Vector2f(camera.position.x + .5f, camera.position.y + 2.75f);
         this.gameObject.transform.position.set(position);
         this.gameObject.transform.zIndex = 10;
     }
@@ -20,7 +20,7 @@ public class EmptyBar extends  Component{
     @Override
     public void update(float dt)
     {
-        position = new Vector2f(camera.position.x + .5f, camera.position.y + 2.5f);
+        position = new Vector2f(camera.position.x + .5f, camera.position.y + 2.75f);
         this.gameObject.transform.position.set(position);
     }
 

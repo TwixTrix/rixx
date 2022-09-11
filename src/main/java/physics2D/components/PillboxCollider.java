@@ -31,10 +31,10 @@ public class PillboxCollider extends Component {
     @Override
     public void editorUpdate(float dt)
     {
+
         topCircle.editorUpdate(dt);
         bottomCircle.editorUpdate(dt);
         box.editorUpdate(dt);
-
         if(resetFixtureNextFrame)
         {
             resetFixture();
@@ -45,6 +45,8 @@ public class PillboxCollider extends Component {
     @Override
     public void update(float dt)
     {
+
+
         if(resetFixtureNextFrame)
         {
             resetFixture();
@@ -94,7 +96,7 @@ public class PillboxCollider extends Component {
         topCircle.setOffset(new Vector2f(offset).add(0, boxHeight / 4.0f));
         bottomCircle.setOffset(new Vector2f(offset).sub(0, boxHeight / 4.0f));
         //TODO fix stuck bug
-        box.setHalfSize( new Vector2f(width/2.0f -.025f, boxHeight/2.0f));
+        box.setHalfSize( new Vector2f(width/2.0f - .05f , boxHeight/2.0f));
         box.setOffset(offset);
     }
 

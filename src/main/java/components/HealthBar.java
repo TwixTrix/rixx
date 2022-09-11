@@ -15,7 +15,7 @@ public class HealthBar extends  Component{
     public void start()
     {
         camera = Window.getScene().camera();
-        position = new Vector2f(camera.position.x + .5f, camera.position.y + 2.5f);
+        position = new Vector2f(camera.position.x + .5f, camera.position.y + 2.75f);
         this.gameObject.transform.position.set(position);
         this.gameObject.transform.zIndex = 9;
 
@@ -37,7 +37,7 @@ public class HealthBar extends  Component{
 
         float offsetScale = this.gameObject.transform.scale.x / 0.5f;
         float offsetX = -0.25f + offsetScale * .5f/2f;
-        position = new Vector2f((camera.position.x + .5f) + offsetX, camera.position.y + 2.5f);
+        position = new Vector2f((camera.position.x + .5f) + offsetX, camera.position.y + 2.75f);
         this.gameObject.transform.position.set(position);
 
 

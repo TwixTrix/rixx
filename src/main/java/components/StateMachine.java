@@ -91,6 +91,7 @@ public class StateMachine extends Component {
                     int newStateIndex = stateIndexOf(stateTransfers.get(state));
                     if(newStateIndex > -1)
                     {
+                        currentState.setCurrentSprite(0);
                         currentState = states.get(newStateIndex);
                     }
                 }

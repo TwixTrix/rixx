@@ -23,7 +23,7 @@ public class Physics2D {
     private World world = new World(gravity);
 
     private float physicsTime = 0.0f;
-    private float physicsTimeStep = 1.0f / 240.0f;
+    private float physicsTimeStep = 1.0f / 60.0f;
     private int velocityIterations = 8;
     private int positionIterations = 3;
 
@@ -124,6 +124,8 @@ public class Physics2D {
             physicsTime -= physicsTimeStep;
             world.step(physicsTimeStep, velocityIterations, positionIterations);
         }
+
+        physicsTimeStep = dt;
     }
     public void setIsSensor(RigidBody2D rb)
     {
@@ -245,6 +247,7 @@ public class Physics2D {
         {
             Vec2[] points = {new Vec2(-halfSize.x,-halfSize.y), new Vec2(halfSize.x , -halfSize.y),new Vec2(halfSize.x, 0+offset), new Vec2(-halfSize.x,halfSize.y)};
             shape.set(points, 4);
+
         }
         else{
              Vec2[] points = {new Vec2(-halfSize.x,-halfSize.y),new Vec2(-halfSize.x,0+offset), new Vec2(halfSize.x , halfSize.y), new Vec2(halfSize.x,-halfSize.y)};
@@ -321,6 +324,12 @@ public class Physics2D {
         Vector2f raycast2End = new Vector2f(raycastEnd).add(innerPlayerWidth, 0.0f);
 
         RaycastInfo info2 = Window.getPhysics().raycast(gameObject , raycast2Begin , raycast2End);
+
+        DebugDraw.addLine2D(raycastBegin, raycastEnd , new Vector3f(1,0,0));
+        DebugDraw.addLine2D(raycast2Begin, raycast2End , new Vector3f(1,0,0));
+
+
+
 
 
         return   (info.hit && info.hitObject != null && info.hitObject.getComponent(Ground.class) != null) || (info2.hit && info2.hitObject != null && info2.hitObject.getComponent(Ground.class) != null);

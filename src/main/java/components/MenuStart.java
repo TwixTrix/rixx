@@ -38,7 +38,7 @@ public class MenuStart extends Component{
         {
 
             Window.changeScene(new LevelSceneInitializer(), Window.LevelLoad() );
-            sceneMusic.playMusic("assets/sounds/main-theme-overworld.ogg");
+
         }
 
 

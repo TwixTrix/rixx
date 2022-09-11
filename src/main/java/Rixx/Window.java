@@ -40,13 +40,13 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Window implements Observer {
     private int width, height;
     private String title;
-    private long glfwWindow;
+    public long glfwWindow;
     private ImGuiLayer imGuiLayer;
     private FrameBuffer frameBuffer;
     private PickingTexture pickingTexture;
     private boolean runtimePlaying = false;
     private static String fileName = "";
-    private static int levelNum = 1;
+    private static int levelNum = 0;
 
 
 
@@ -69,12 +69,17 @@ public class Window implements Observer {
         levelNum = LevelLoadNum();
 
     }
+    public static int getLevelNum()
+    {
+        return  levelNum;
+    }
 
     public static void changeScene(SceneInitializer sceneInitializer, String newFile)
     {
         if(currentScene != null)
         {
             currentScene.destroy();
+            sceneMusic.stopMusic();
 
         }
 
@@ -213,7 +218,7 @@ public class Window implements Observer {
 
         glViewport(0,0, 2560, 1080);
 
-        Window.changeScene(new LevelEditorSceneInitializer(), "level.txt");
+        Window.changeScene(new LevelEditorSceneInitializer(), "menu.txt");
     }
 
 
@@ -280,14 +285,14 @@ public class Window implements Observer {
             this.frameBuffer.unbind();
             this.imGuiLayer.update(dt, currentScene);
 
-            KeyListener.endFrame();
+          //  KeyListener.endFrame();
             MouseListener.endFrame();
             glfwSwapBuffers(glfwWindow);
 
 
             //FRAME RATE
             //----------------------------------------------------------------------------------\
-           // System.out.println(1/dt);
+          System.out.println(1/dt);
 
 
 
@@ -344,6 +349,7 @@ public class Window implements Observer {
                 Fireball.fireballCount = 0;
                 FlameBall.zero();
                 Window.changeScene(new LevelSceneInitializer(), "menu.txt");
+
 
                 break;
             case GameEngineStopPlay:
@@ -402,10 +408,12 @@ public class Window implements Observer {
     public static void incrementLevel()
     {
         levelNum++;
+        LevelSave();
     }
     public static void incrementLevel(int i)
     {
-        levelNum += i;
+        levelNum = i;
+        LevelSave();
     }
 
     public static String LevelLoad()

@@ -62,7 +62,7 @@ public class Sound {
 
         alSourcei(sourceID , AL_LOOPING , loops ? 1 : 0 );
         alSourcei(sourceID, AL_POSITION , 0);
-        alSourcef(sourceID, AL_GAIN , .1f);
+        alSourcef(sourceID, AL_GAIN , 1f);
 
 
         //Free stb raw audio buffer
@@ -92,6 +92,7 @@ public class Sound {
         if(!isPlaying)
         {
             alSourcePlay(sourceID);
+
             isPlaying = true;
         }
     }

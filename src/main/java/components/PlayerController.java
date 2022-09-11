@@ -27,13 +27,19 @@ public class PlayerController extends Component{
 
 
     public float walkSpeed = 1.9f;
-    public float jumpBoost = 1.0f;
-    public float jumpImpulse = 3.0f;
-    public float slowDownForce  = 0.05f;
+
+    public float jumpBoost = .8f;
+    public float jumpImpulse = 2.5f;
+    public float slowDownForce  = 0.05f*4f;
     public Vector2f terminalVelocity = new Vector2f(2.1f, 3.1f);
 
-    private static int healthLimit = 100;
+    private static int healthLimit = 1000;
     private static int health = healthLimit;
+    private transient float mana = 1000;
+    private transient float maxMana = 1000;
+    private transient float manaRate = 15f;
+    private transient float shieldManaRate = 100f;
+    private transient boolean shieldActive = false;
 
 
 
@@ -43,11 +49,10 @@ public class PlayerController extends Component{
     private transient RigidBody2D rb;
     private transient StateMachine stateMachine;
     private transient float bigJumpBoostFactor = 1.05f;
-    private transient float playerWidth = 0.25f;
-    private transient  int jumpTime = 0;
+    private transient float playerWidth ;
+    private transient  float jumpTime = 0;
     private transient Vector2f acceleration = new Vector2f();
     private transient Vector2f velocity = new Vector2f();
-    private transient boolean isDead = false;
     private transient int enemyBounce = 0;
 
     private transient float hurtInvincibilityTimeLeft = 0;
@@ -59,13 +64,34 @@ public class PlayerController extends Component{
     private transient SpriteRenderer spr;
 
     private transient boolean playWinAnimation = false;
-    private transient float timeToCastle = 4.5f;
-    private transient float walkTime = 2.2f;
+    private transient float timeToCastle = 30f;
+    private transient float walkTime = 30f;
     private transient boolean sentEvent = false;
     private transient float executiveEndTime = 6f;
 
     private transient boolean isHoldingRightClick = false;
     private transient float rightClickHoldTime = 0;
+
+
+    private transient boolean attacking = false;
+    private transient float attackTimeLeft = .7f;
+    private transient boolean swung = false;
+
+    private transient boolean isDead = false;
+    private transient float deathTimer = 5f;
+
+    private  transient float levelBeginTimer = .3f;
+    private transient  GameObject shield;
+
+    private transient boolean facingRight = false;
+    private transient boolean facingRightOfClick = false;
+
+    private transient float sprintSpeed = 4f;
+    private transient boolean sprinting = false;
+    private transient float sprintCoolDown =0f ;
+    private transient float sprintTime = .3f;
+
+
 
 
     @Override
@@ -77,6 +103,7 @@ public class PlayerController extends Component{
         this.rb.setGravityScale(0.0f);
         this.healthLimit = playerHealthLimitLoad();
         this.health = playerHealthLoad();
+        this.playerWidth  = gameObject.transform.scale.x;
 
 
 
@@ -84,112 +111,44 @@ public class PlayerController extends Component{
 
     public void update(float dt)
     {
+        levelBeginTimer-=dt;
 
-
-        if(health <=0 && !isDead)
+        if(levelBeginTimer > 0)
         {
-            die();
-        }
-
-
-        if(playWinAnimation)
-        {
-            executiveEndTime -= dt;
-            if(executiveEndTime <= 0 || timeToCastle <= 0)
-            {
-                nextLevel();
-            }
-            checkOnGround();
-            if(!onGround)
-            {
-                gameObject.transform.scale.x = -0.25f;
-                gameObject.transform.position.y -= dt;
-                stateMachine.trigger("stopRunning");
-                stateMachine.trigger("stopJumping");
-            }
-            else
-            {
-                if(this.walkTime > 0)
-                {
-                    this.gameObject.transform.scale.x = 0.25f;
-                    this.gameObject.transform.position.x += dt;
-                    stateMachine.trigger("startRunning");
-
-                }
-                if(!AssetPool.getSound("assets/sounds/stage_clear.ogg").isPlaying())
-                {
-                    AssetPool.getSound("assets/sounds/stage_clear.ogg").play();
-                }
-                timeToCastle -= dt;
-                walkTime -=dt;
-
-
-            }
-
-
             return;
         }
-
 
         if(isDead)
         {
-            if(this.gameObject.transform.position.y < deadMaxHeight && deadGoingUp)
+            deathTimer -=dt;
+            if(deathTimer <= 0)
             {
-                this.gameObject.transform.position.y += dt * walkSpeed / 2.0f;
-            }
-            else if(this.gameObject.transform.position.y > deadMaxHeight && deadGoingUp)
-            {
-                this.deadGoingUp = false;
-            }
-            else if(!deadGoingUp && this.gameObject.transform.position.y > deadMinHeight)
-            {
-                this.rb.setBodyType(BodyType.Kinematic);
-                this.acceleration.y  = Window.getPhysics().getGravity().y * 0.7f;
-                this.velocity.y += this.acceleration.y * dt;
-                this.velocity.y  = Math.max(Math.min(this.velocity.y, this.terminalVelocity.y), -this.terminalVelocity.y);
-                this.rb.setVelocity(this.velocity);
-                this.rb.setAngularVelocity(0);
-            } else if(!deadGoingUp && this.gameObject.transform.position.y <= deadMinHeight)
-            {
-                Fireball.fireballCount = 0;
-                Window.changeScene(new LevelSceneInitializer());
+                Window.changeScene(new LevelSceneInitializer(), Window.LevelLoad());
             }
             return;
         }
 
-        if(hurtInvincibilityTimeLeft > 0)
-        {
-            hurtInvincibilityTimeLeft -=dt;
-            blinkTime-= dt;
+
+        DebugDraw.draw();
+        hurtInvincibilityTimeLeft -=dt;
 
 
-            if(blinkTime <= 0)
-            {
-                blinkTime = 0.2f;
-                if(spr.getColor().w == 1 )
-                {
-                    spr.setColor(new Vector4f(1,1,1,0));
-                }else
-                {
-                    spr.setColor(new Vector4f(1,1,1,1));
-                }
-            }else
-            {
-                if(spr.getColor().w == 0)
-                {
-                    spr.setColor(new Vector4f(1,1,1,1));
-                }
-            }
-        }
+
+
+
 
         if(KeyListener.isKeyPressed(GLFW_KEY_RIGHT) || KeyListener.isKeyPressed(GLFW_KEY_D))
         {
-            this.gameObject.transform.scale.x = playerWidth;
+            if(!attacking)
+            {
+                this.gameObject.transform.scale.x = playerWidth;
+            }
             this.acceleration.x = walkSpeed;
+            facingRight = true;
 
             if(this.velocity.x < 0)
             {
-                this.stateMachine.trigger("switchDirection");
+                this.stateMachine.trigger("startRunning");
                 this.velocity.x += slowDownForce;
             }
             else
@@ -198,12 +157,17 @@ public class PlayerController extends Component{
             }
         } else if(KeyListener.isKeyPressed(GLFW_KEY_LEFT) || KeyListener.isKeyPressed(GLFW_KEY_A))
         {
-            this.gameObject.transform.scale.x = -playerWidth;
+            if(!attacking)
+            {
+                this.gameObject.transform.scale.x = -playerWidth;
+            }
+
             this.acceleration.x = -walkSpeed;
+            facingRight = false;
 
             if(this.velocity.x > 0)
             {
-                this.stateMachine.trigger("switchDirection");
+                this.stateMachine.trigger("startRunning");
                 this.velocity.x -= slowDownForce;
             }
             else
@@ -216,10 +180,12 @@ public class PlayerController extends Component{
             if(this.velocity.x > 0)
             {
                 this.velocity.x = Math.max(0, this.velocity.x - slowDownForce);
+
             }
             else if(this.velocity.x < 0)
             {
                 this.velocity.x = Math.min(0, this.velocity.x + slowDownForce);
+
             }
 
             if(this.velocity.x == 0)
@@ -228,51 +194,94 @@ public class PlayerController extends Component{
             }
         }
 
-        if(KeyListener.keyBeginPress(GLFW_KEY_E) && Fireball.canSpawn())
+
+
+        if(MouseListener.mouseButtonDown(GLFW_MOUSE_BUTTON_1) && !attacking)
         {
-            Vector2f position = new Vector2f(this.gameObject.transform.position).add(this.gameObject.transform.scale.x >0 ? new Vector2f(0.26f, 0) : new Vector2f(-0.26f, 0));
-            GameObject fireball = Prefabs.generateFireball(position);
-            fireball.getComponent(Fireball.class).goingRight = this.gameObject.transform.scale.x >0;
-            Window.getScene().addGameObjectToScene(fireball);
+            stateMachine.trigger("jumpFall");
+            stateMachine.trigger("fallRun");
+            stateMachine.trigger("runAttack");
+            stateMachine.trigger("idleAttack");
+            attacking = true;
+            facingRightOfClick = facingRight;
+
+
 
         }
 
-        if(MouseListener.mouseButtonDown(GLFW_MOUSE_BUTTON_2) && FlameBall.canSpawn())
-        {
-            GameObject flameBall = Prefabs.generateFlameBall();
-            Window.getScene().addGameObjectToScene(flameBall);
-            isHoldingRightClick = true;
-            heal(100);
+            if(shield != null)
+            {
+                shield.transform.position.set(this.gameObject.transform.position.x, this.gameObject.transform.position.y + 0.08f);
+            }
 
-        }
-        else if(MouseListener.mouseButtonDown(GLFW_MOUSE_BUTTON_2))
+         if(MouseListener.mouseButtonDown(GLFW_MOUSE_BUTTON_2) && mana > 0)
         {
+            if(!isHoldingRightClick)
+            {
+                 shield = Prefabs.heroShield(new Vector2f(this.gameObject.transform.position.x, this.gameObject.transform.position.y));
+                 Window.getScene().addGameObjectToScene(shield);
+                 shieldActive = true;
+                 removeMana(100);
+            }
             isHoldingRightClick = true;
             rightClickHoldTime += dt;
+            mana -=dt * shieldManaRate;
         }
         else{
-            if(isHoldingRightClick )
+            if(isHoldingRightClick || mana< 0 )
             {
-                Window.getScene().getGameObjectWith(FlameBall.class).getComponent(FlameBall.class).send();
+                shield.destroy();
+                shieldActive = false;
             }
             isHoldingRightClick = false;
+            rightClickHoldTime = 0;
 
+        }
+
+        if(!swung && attackTimeLeft <.3f && attacking)
+        {
+            swung = true;
+            Vector2f position = new Vector2f(this.gameObject.transform.position.x , this.gameObject.transform.position.y);
+            if(facingRightOfClick)
+            {
+                position.add(.4f,.05f);
+            }
+            else {
+                position.sub(.4f,-.05f);
+            }
+
+            Window.getScene().addGameObjectToScene(Prefabs.PlayerAttackBox(position , .8f, .85f , 100 , .1f));
+
+        }
+
+        if(attacking && attackTimeLeft <= 0)
+        {
+            stateMachine.trigger("attackRun");
+            attacking = false;
+            swung = false;
+            attackTimeLeft = .55f;
+        }else if(attacking)
+        {
+            attackTimeLeft -=dt;
         }
 
 
         checkOnGround();
         if(KeyListener.isKeyPressed(GLFW_KEY_SPACE) && (jumpTime > 0 || onGround || groundDebounce > 0))
         {
-            if((onGround || groundDebounce > 0) && jumpTime == 0)
+            if((onGround || groundDebounce > 0) && jumpTime <= 0)
             {
                 AssetPool.getSound("assets/sounds/jump-small.ogg").play();
-                jumpTime = 112 ;
+                jumpTime = .7f ;
                 this.velocity.y = jumpImpulse;
+                stateMachine.trigger("startRunning");
+                stateMachine.trigger("runJump");
             }
             else if(jumpTime > 0)
             {
-                jumpTime --;
-                this.velocity.y = ((jumpTime / 2.2f) * jumpBoost);
+                jumpTime -= dt;
+                this.velocity.y = ((jumpTime / .078f) * jumpBoost);
+
             }
             else
             {
@@ -303,30 +312,76 @@ public class PlayerController extends Component{
             groundDebounce = groundDebounceTime;
         }
 
+        if(this.velocity.y <=0)
+        {
+            stateMachine.trigger("jumpFall");
+        }
+        if(this.velocity.y == 0)
+        {
+            stateMachine.trigger("fallRun");
+        }
+
+
 
 
         this.velocity.x += this.acceleration.x * dt;
         this.velocity.y += this.acceleration.y * dt;
         this.velocity.x = Math.max(Math.min(this.velocity.x, this.terminalVelocity.x), -this.terminalVelocity.x) ;
         this.velocity.y = Math.max(Math.min(this.velocity.y, this.terminalVelocity.y), -this.terminalVelocity.y);
+
+       if(sprintCoolDown <= 0)
+       {
+           if(KeyListener.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !sprinting )
+           {
+
+               sprinting = true;
+               //mana -= 50f;
+               if(facingRight)
+               {
+                   this.velocity.x = sprintSpeed;
+               }
+               else
+               {
+                   this.velocity.x = -sprintSpeed;
+               }
+           }
+           else if(sprinting && sprintTime > 0)
+           {
+               if(facingRight)
+               {
+                   this.velocity.x = sprintSpeed;
+               }
+               else
+               {
+                   this.velocity.x = -sprintSpeed;
+               }
+               sprintTime -=dt;
+           }
+           else if(sprinting )
+           {
+               sprinting = false;
+               sprintTime = .3f;
+               sprintCoolDown = 1f;
+
+           }
+       }
+       else
+       {
+           sprintCoolDown -=dt;
+       }
+
+
         this.rb.setVelocity(this.velocity);
         this.rb.setAngularVelocity(0);
 
-        if(!onGround)
-        {
-            stateMachine.trigger("jump");
-        }
-        else
-        {
-            stateMachine.trigger("stopJumping");
-        }
+
     }
 
     public void checkOnGround()
     {
 
-        float innerPlayerWidth = this.playerWidth * 0.6f;
-        float yVal = -0.14f;
+        float innerPlayerWidth = this.gameObject.getComponent(PillboxCollider.class).width * 0.47f;
+        float yVal = -0.33f;
       onGround = Physics2D.checkOnGround(this.gameObject, innerPlayerWidth, yVal );
 
 
@@ -357,14 +412,26 @@ public class PlayerController extends Component{
             if(Math.abs(contactNormal.x) > 0.8f)
             {
                 this.velocity.x = 0;
+
             }
             else if(contactNormal.y > 0.8f)
             {
                 this.velocity.y = 0;
                 this.acceleration.y = 0;
                 jumpTime = 0;
+
             }
         }
+        if(collidingObject.getComponent(gluttonyAI.class) != null)
+        {
+            this.rb.setVelocityX(0);
+        }
+
+    }
+
+    @Override
+    public void preSolve(GameObject obj, Contact contact , Vector2f contactNormal)
+    {
 
     }
 
@@ -398,21 +465,13 @@ public class PlayerController extends Component{
 
     public void die()
     {
-        this.stateMachine.trigger("die");
-        this.velocity.set(0,0);
-        this.acceleration.set(0,0);
-        this.rb.setVelocity(new Vector2f());
-        this.isDead = true;
-        this.rb.setIsSensor();
-        AssetPool.getSound("assets/sounds/mario_die.ogg").play();
-        FlameBall.zero();
-        deadMaxHeight = this.gameObject.transform.position.y + 0.3f;
+        stateMachine.trigger("jumpFall");
+        stateMachine.trigger("fallRun");
+        stateMachine.trigger("startRunning");
+        stateMachine.trigger("attackRun");
+        stateMachine.trigger("die");
+        isDead = true;
         this.rb.setBodyType(BodyType.Static);
-        if(gameObject.transform.position.y > 0)
-        {
-            deadMinHeight = -0.25f;
-        }
-
     }
 
     public boolean hasWon()
@@ -515,8 +574,20 @@ public class PlayerController extends Component{
 
     public void damage(int damageAmount)
     {
-        if(health <=0 || isHoldingRightClick) return;
+
+        if( shieldActive) return;
+        if(isHurtInvincible())return; ;
         health -= damageAmount;
+        AssetPool.getSound("assets/sounds/player/hit.ogg").play();
+        if(health <= 0)
+        {
+            health = 0;
+            die();
+            return;
+        }
+
+
+        hurtInvincibilityTimeLeft = hurtInvincibleTime;
 
 
     }
@@ -530,6 +601,14 @@ public class PlayerController extends Component{
     {
         return health;
     }
+    public float getMana()
+    {
+        return mana;
+    }
+    public float getManaLimit()
+    {
+        return maxMana;
+    }
 
     public void heal(int healAmount)
     {
@@ -538,6 +617,33 @@ public class PlayerController extends Component{
             health = healthLimit;
         }
     }
+
+    public void replenishMana(float amount)
+    {
+        mana += amount;
+        if(mana> maxMana)
+        {
+            heal((int)((mana - maxMana)/5));
+            mana = maxMana;
+        }
+    }
+
+    public void removeMana(float amount)
+    {
+
+        mana -=amount;
+        if(mana < 0)
+        {
+            damage(-(int)mana);
+            mana = 0;
+        }
+    }
+
+    public boolean isFacingRight()
+    {
+        return facingRight;
+    }
+
 
 
 }

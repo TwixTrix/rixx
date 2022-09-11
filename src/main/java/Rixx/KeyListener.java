@@ -2,8 +2,7 @@ package Rixx;
 
 import java.util.Arrays;
 
-import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class KeyListener {
     private static KeyListener instance;
@@ -25,6 +24,8 @@ public class KeyListener {
         return KeyListener.instance;
     }
     public static void keyCallback(long window, int key, int scancode, int action, int mods){
+
+
         if(action== GLFW_PRESS){
             get().keyPressed[key]= true;
             get().keyBeginPress[key] = true;
@@ -34,8 +35,10 @@ public class KeyListener {
             get().keyBeginPress[key] = false;
         }
     }
-    public static boolean isKeyPressed(int keyCode){
-        return get().keyPressed[keyCode];
+    public static boolean isKeyPressed(int keyCode) {
+        long window = Window.get().glfwWindow;
+        return glfwGetKey(window , keyCode) == GLFW_PRESS;
+
     }
 
     public static boolean keyBeginPress(int keyCode)

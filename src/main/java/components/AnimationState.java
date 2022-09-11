@@ -56,4 +56,9 @@ public class AnimationState {
         return defaultSprite;
     }
 
+    public void setCurrentSprite(int index)
+    {
+        currentSprite = index;
+    }
+
 }

@@ -36,7 +36,6 @@ public class GameCamera extends Component {
         if(player != null && !player.getComponent(PlayerController.class).hasWon())
         {
             sceneCamera.position.x = player.transform.position.x -3f;
-            highestX = Math.max(highestX, sceneCamera.position.x);
 
             if(player.transform.position.y < -playerBuffer)
             {
